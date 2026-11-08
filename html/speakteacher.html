@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speaking Practice Teacher Portal</title>
+
+    <!-- External CSS stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="main-content">
+    <div id="auth-header" class="hidden">
+        <span id="user-info">Logged in as: Teacher</span>
+        
+        <div id="header-nav-container" class="header-nav-group hidden">
+            <button id="header-home-btn" class="nav-btn">🏠 Main Menu</button>
+            <button id="header-ra-bank-btn" class="nav-btn">📖 Read Aloud Bank</button>
+            <button id="header-rp-bank-btn" class="nav-btn">🎭 Role Play Bank</button>
+            <button id="header-submissions-btn" class="nav-btn">📊 Submissions</button>
+            <button id="header-new-btn" class="nav-btn">✨ New Template</button>
+            <button id="header-bin-btn" class="nav-btn">🗑️ Recycle Bin</button>
+        </div>
+
+        <button id="logout-btn">🔓 Sign Out</button>
+    </div>
+
+    <div id="login-card" class="card">
+        <h2>Teacher Sign In</h2>
+        <p>Please log in using your school account: <strong>@cedarsupper.co.uk</strong>.</p>
+        <button id="auth-btn">Sign In with Google Classroom</button>
+    </div>
+
+    <div id="main-menu-section" class="card hidden">
+        <h2 style="margin-top:0;">Speaking Practice Dashboard</h2>
+        
+        <div class="menu-grid">
+            <div class="menu-card" id="menu-ra-bank">
+                <div class="menu-icon">📖</div>
+                <div class="menu-title">Read Aloud Bank</div>
+                <div class="menu-desc">Browse and edit master Read Aloud tasks.</div>
+            </div>
+            <div class="menu-card" id="menu-rp-bank">
+                <div class="menu-icon">🎭</div>
+                <div class="menu-title">Role Play Bank</div>
+                <div class="menu-desc">Browse and edit master Role Play tasks.</div>
+            </div>
+            <div class="menu-card" id="menu-submissions">
+                <div class="menu-icon">📊</div>
+                <div class="menu-title">Student Submissions</div>
+                <div class="menu-desc">Mark students' work.</div>
+            </div>
+            <div class="menu-card" id="menu-new-task">
+                <div class="menu-icon">✨</div>
+                <div class="menu-title">New Template</div>
+                <div class="menu-desc">Create Read Aloud and Role Plays tasks.</div>
+            </div>
+            <div class="menu-card" id="menu-bin">
+                <div class="menu-icon">🗑️</div>
+                <div class="menu-title">Recycle Bin</div>
+                <div class="menu-desc">Review deleted items.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="read-aloud-bank-section" class="card hidden">
+        <h2>📖 Master Read Aloud Bank</h2>
+        <div id="ra-lang-row" class="horizontal-btn-row"></div>
+        <div id="ra-year-block" class="hidden">
+            <div id="ra-year-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="ra-topic-block" class="hidden">
+            <div id="ra-topic-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="ra-tier-block" class="hidden">
+            <div id="ra-tier-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="ra-tasks-block" class="hidden">
+            <div id="ra-tasks-grid" class="tasks-display-container"></div>
+        </div>
+    </div>
+
+    <div id="role-play-bank-section" class="card hidden">
+        <h2>🎭 Master Role Play Bank</h2>
+        <div id="rp-lang-row" class="horizontal-btn-row"></div>
+        <div id="rp-year-block" class="hidden">
+            <div id="rp-year-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="rp-topic-block" class="hidden">
+            <div id="rp-topic-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="rp-tier-block" class="hidden">
+            <div id="rp-tier-row" class="horizontal-btn-row"></div>
+        </div>
+        <div id="rp-tasks-block" class="hidden">
+            <div id="rp-tasks-grid" class="tasks-display-container"></div>
+        </div>
+    </div>
+
+    <div id="submissions-section" class="card hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">📊 Student Progress & Grades</h2>
+        </div>
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="filter-course">Filter by Classroom Course:</label>
+                <select id="filter-course">
+                    <option value="">-- Choose a Course --</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-task">Filter by Assigned Task:</label>
+                <select id="filter-task" disabled>
+                    <option value="">-- Select a Class first --</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="active-assignment-info" class="hidden" style="margin-bottom: 20px; padding: 15px; border-radius: 6px; background-color: #fdf6e2; border: 1px solid #f39c12; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <strong style="color: #d35400; font-size: 16px;">Active Version for this Class</strong>
+                    <span id="submission-counter-badge" style="background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 13px;">
+                        📥 0 / 0 Submitted
+                    </span>
+                </div>
+                <div id="active-task-metadata" style="font-size: 12px; color: #7f8c8d; margin-top: 4px;">Tier: --</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="sync-all-classroom-grades-btn" class="btn-inline-sync-task">🔄 Sync Grades to Classroom</button>
+                <button id="edit-assigned-task-btn" class="btn-inline-edit">📝 Edit This Assignment</button>
+                <button id="delete-assigned-task-btn" class="btn-inline-delete">🗑️ Delete Assignment</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Student Details</th>
+                    <th style="width: 20%;">Submission</th>
+                    <th style="width: 20%;">SSC Accuracy (Editable)</th>
+                    <th style="width: 15%;" id="grade-column-header">Overall Grade</th>
+                    <th style="width: 10%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="submissions-table-body">
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #7f8c8d;">Please select a course and assignment above.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="bin-section" class="card hidden">
+        <h2>🗑️ Template Recycle Bin</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Deleted master templates are stored here. Items in the Recycle Bin are auto-deleted after 30 days.</p>
+        <div id="bin-list" style="margin-top: 15px;"></div>
+    </div>
+
+    <div id="editor-section" class="card hidden">
+        <h2 id="editor-title" style="margin-top: 0; margin-bottom: 5px;">Create Template Passage</h2>
+        <div id="editor-mode-indicator" style="font-size: 12px; color: #e67e22; font-weight: bold; margin-bottom: 15px;"></div>
+        
+        <div id="meta-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px;">
+           <select id="activity-type-input" style="margin: 0;" required>
+                <option value="read_aloud">📖 Read Aloud</option>
+                <option value="role_play">🎭 Role Play</option>
+            </select>
+           <select id="language-input" style="margin: 0;" required>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+            </select>
+            <select id="tier-input" style="margin: 0;" required>
+                <option value="foundation">Foundation</option>
+                <option value="higher">Higher</option>
+            </select>
+            
+            <select id="year-input" style="margin: 0;" required>
+                <option value="Year 9">Year 9</option>
+                <option value="GCSE">GCSE</option>
+            </select>
+            
+            <select id="topic-select" style="margin: 0;" required>
+                <option value="__NEW__">➕ Create new topic</option>
+            </select>
+            <input type="text" id="topic-input" placeholder="New Topic Name" style="margin: 0;" required>
+        </div>
+        <input type="text" id="title-input" placeholder="Title (e.g., Un café au centre-ville)" style="margin: 0 0 15px 0;" required>
+        <div id="rp-scenario-container" class="hidden" style="margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 14px; color: #34495e; display: block; margin-bottom: 6px;">Role Play Scenario / Instructions:</label>
+            <textarea id="rp-scenario-input" rows="3" placeholder="Role play scenario" style="margin-top: 0; margin-bottom: 0;"></textarea>
+        </div>
+        <div class="editor-grid">
+            <div class="editor-left-col">
+                <div id="read-aloud-inputs-container">
+                    <label style="font-weight: bold; font-size: 14px; color: #34495e; display: block; margin-bottom: 6px;">Read Aloud Passage Text:</label>
+                    <textarea id="text-input" rows="7" placeholder="Type or paste the reading text here..." style="margin-top: 0; margin-bottom: 20px;"></textarea>
+                    
+                    <h3 style="border-bottom: 1px solid #ddd; padding-bottom: 6px; margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #2c3e50;">🔊 Unseen Questions</h3>
+                    
+                    <div style="background:#f9f9f9; padding:10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                        <strong style="font-size: 13px; color: #2c3e50; display: block; margin-bottom: 5px;">Unseen Question 1 :</strong>
+                        <input type="text" id="unseen-1-title" placeholder="Qu'est-ce que tu aimes faire pendant les vacances?" style="margin: 0;">
+                    </div>
+
+                    <div style="background:#f9f9f9; padding:10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                        <strong style="font-size: 13px; color: #2c3e50; display: block; margin-bottom: 5px;">Unseen Question 2 :</strong>
+                        <input type="text" id="unseen-2-title" placeholder="Où es-tu allé en vacances l'année dernière?" style="margin: 0;">
+                    </div>
+                </div>
+
+                <div id="role-play-inputs-container" class="hidden">
+                    <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 6px;">🎭 Role Play</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; gap: 15px; background: #fdfefe; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px;">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #e67e22; text-transform: uppercase;">Teacher Prompt 1</strong>
+                                <input type="text" id="rp-teacher-1" placeholder="Bonjour! Que désirez-vous?" style="margin: 4px 0 0 0;">
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #2ecc71; text-transform: uppercase;">Student Prompt 1</strong>
+                                <input type="text" id="rp-student-1" placeholder="Greet the teacher and order a hot beverage." style="margin: 4px 0 0 0;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; background: #fdfefe; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px;">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #e67e22; text-transform: uppercase;">Teacher Prompt 2</strong>
+                                <input type="text" id="rp-teacher-2" placeholder="Très bien. Et avec ça?" style="margin: 4px 0 0 0;">
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #2ecc71; text-transform: uppercase;">Student Prompt 2</strong>
+                                <input type="text" id="rp-student-2" placeholder="Ask for a chocolate croissant." style="margin: 4px 0 0 0;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; background: #fdfefe; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px;">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #e67e22; text-transform: uppercase;">Teacher Prompt 3</strong>
+                                <input type="text" id="rp-teacher-3" placeholder="Autre chose? Ce sera tout?" style="margin: 4px 0 0 0;">
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #2ecc71; text-transform: uppercase;">Student Prompt 3</strong>
+                                <input type="text" id="rp-student-3" placeholder="Say that is all, and ask how much it costs." style="margin: 4px 0 0 0;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; background: #fdfefe; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px;">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #e67e22; text-transform: uppercase;">Teacher Prompt 4</strong>
+                                <input type="text" id="rp-teacher-4" placeholder="Ça fait six euros, s'il vous plaît." style="margin: 4px 0 0 0;">
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #2ecc71; text-transform: uppercase;">Student Prompt 4</strong>
+                                <input type="text" id="rp-student-4" placeholder="State you are paying by card." style="margin: 4px 0 0 0;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; background: #fdfefe; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px;">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #e67e22; text-transform: uppercase;">Teacher Prompt 5</strong>
+                                <input type="text" id="rp-teacher-5" placeholder="Merci beaucoup, bonne journée!" style="margin: 4px 0 0 0;">
+                            </div>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 11px; color: #2ecc71; text-transform: uppercase;">Student Prompt 5</strong>
+                                <input type="text" id="rp-student-5" placeholder="Wish them a good day back and say goodbye." style="margin: 4px 0 0 0;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button id="save-btn" style="margin-top: 0; flex: 1;">Save changes</button>
+                    <button id="cancel-editor-btn" class="btn-secondary" style="margin-top: 0; flex: 1;">Cancel</button>
+                </div>
+            </div>
+
+            <div id="assign-section" class="editor-right-col hidden">
+                <h3 id="assign-section-title" style="margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #2c3e50; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                    🏫 Publish to Google Classroom
+                </h3>
+
+                <p id="assign-section-desc" style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px; line-height: 1.4;">
+                    Select a class to publish and post this template instantly as an interactive speaking activity.
+                </p>
+
+                <label style="font-weight: bold; font-size: 13px; color: #34495e; display: block; margin-bottom: 5px;">
+                    Choose Class Course:
+                </label>
+
+                <select id="course-select" style="margin: 0 0 10px 0;">
+                    <option>Loading your classes...</option>
+                </select>
+
+                <!-- Google Classroom-style student selector -->
+                <button
+                    type="button"
+                    id="all-students-btn"
+                    style="
+                        width: 100%;
+                        margin: 0 0 10px 0;
+                        padding: 10px 12px;
+                        background: #f8fafc;
+                        color: #2c3e50;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 600;
+                        text-align: left;
+                    "
+                >
+                    👥 All students
+                    <span id="student-selection-summary" style="float: right; color: #64748b; font-weight: 500;">
+                        Loading...
+                    </span>
+                </button>
+
+                <div
+                    id="student-selector-panel"
+                    class="hidden"
+                    style="
+                        margin: 0 0 15px 0;
+                        border: 1px solid #d9e2ec;
+                        border-radius: 6px;
+                        background: #fff;
+                        overflow: hidden;
+                    "
+                >
+                    <div
+                        style="
+                            padding: 10px 12px;
+                            background: #f8fafc;
+                            border-bottom: 1px solid #e2e8f0;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 10px;
+                        "
+                    >
+                        <strong style="font-size: 13px; color: #34495e;">
+                            Assign to students
+                        </strong>
+
+                        <button
+                            type="button"
+                            id="select-all-students-btn"
+                            style="
+                                border: none;
+                                background: transparent;
+                                color: #1a73e8;
+                                cursor: pointer;
+                                font-size: 12px;
+                                font-weight: 600;
+                            "
+                        >
+                            Select all
+                        </button>
+                    </div>
+
+                    <div
+                        id="student-list"
+                        style="
+                            max-height: 260px;
+                            overflow-y: auto;
+                            padding: 6px 0;
+                        "
+                    ></div>
+                </div>
+
+                <label style="font-weight: bold; font-size: 13px; color: #34495e; display: block; margin-bottom: 5px;">
+                    Google Classroom Topic:
+                </label>
+
+                <select id="gc-topic-select" style="margin: 0 0 15px 0;">
+                    <option value="">-- No Topic --</option>
+                    <option value="__NEW__">➕ Create new topic</option>
+                </select>
+
+                <input
+                    type="text"
+                    id="gc-topic-input"
+                    class="hidden"
+                    placeholder="New GC Topic Name"
+                    style="margin: 0 0 15px 0;"
+                >
+
+                <label
+                    for="due-date-input"
+                    style="font-weight: bold; font-size: 13px; color: #34495e; display: block; margin-bottom: 5px;"
+                >
+                    Set Due Date & Time (Optional):
+                </label>
+
+                <input
+                    type="datetime-local"
+                    id="due-date-input"
+                    style="margin: 0 0 20px 0; padding: 10px;"
+                >
+
+                <button id="assign-btn" style="margin-top: 0; background: #27ae60;">
+                    Post Assignment to Classroom
+                </button>
+
+                <p
+                    id="status"
+                    style="color: #27ae60; font-weight: bold; margin-top: 15px; font-size: 13px; line-height: 1.45;"
+                ></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDKs & Google API Script -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+
+<!-- Application JavaScript -->
+<script src="script.js"></script>
+
+</body>
+</html>
