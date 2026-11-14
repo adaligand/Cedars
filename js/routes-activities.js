@@ -86,8 +86,30 @@ function applyTransformations(text, rulesText) {
         if (find) {
             const escapeReg = s => s.replace(/[-[\]{}()*+?^$|#\s\\.]/g, '\\$&');
 
-            // 1. Split / Discontinuous rule: word1+word3=replacement
-            if (find.includes('+')) {
+            // 1. Triggered / Conditional rule: trigger$target=replacement
+            if (find.includes('$')) {
+                const subParts = find.split('$').map(s => s.trim());
+                if (subParts.length === 2 && subParts[0] && subParts[1]) {
+                    const [w1, w2] = subParts;
+                    let p1 = escapeReg(w1);
+                    let p2 = escapeReg(w2);
+
+                    if (/^[\w\u00C0-\u024F]/.test(w1)) p1 = '(?<![a-zA-Z0-9\u00C0-\u024F])' + p1;
+                    if (/[\w\u00C0-\u024F]$/.test(w1)) p1 = p1 + '(?![a-zA-Z0-9\u00C0-\u024F])';
+
+                    if (/^[\w\u00C0-\u024F]/.test(w2)) p2 = '(?<![a-zA-Z0-9\u00C0-\u024F])' + p2;
+                    if (/[\w\u00C0-\u024F]$/.test(w2)) p2 = p2 + '(?![a-zA-Z0-9\u00C0-\u024F])';
+
+                    const regex = new RegExp(`(${p1}.*?)${p2}`, 'gi');
+                    let prev, guard = 0;
+                    do {
+                        prev = text;
+                        text = text.replace(regex, (match, prefix) => prefix + replace);
+                    } while (text !== prev && ++guard < 20);
+                }
+            }
+            // 2. Split / Discontinuous rule: word1+word3=replacement
+            else if (find.includes('+')) {
                 const subParts = find.split('+').map(s => s.trim());
                 if (subParts.length === 2 && subParts[0] && subParts[1]) {
                     const [w1, w3] = subParts;
@@ -104,7 +126,7 @@ function applyTransformations(text, rulesText) {
                     text = text.replace(regex, `${replace} $1`);
                 }
             } 
-            // 2. Standard replace / delete rule
+            // 3. Standard replace / delete rule
             else {
                 let pattern = escapeReg(find);
 
