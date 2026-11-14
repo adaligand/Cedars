@@ -8,7 +8,7 @@ let classDisplaySentences = []; // Holds the randomized sentence list
 let cdTimer = null;
 let currentCDGapText = null;
 let cdGridTimerInterval = null;
-let cdGridRemainingSeconds = 120;
+let cdGridRemainingSeconds = 300;
 let cdGridIsRunning = false;
 
 function clearCDTimer() {
@@ -25,6 +25,16 @@ function clearGridTimer() {
         cdGridTimerInterval = null;
     }
     cdGridIsRunning = false;
+}
+
+function restoreDefaultGridTimer() {
+    clearGridTimer();
+    const minsEl = document.getElementById('cd-grid-mins');
+    const secsEl = document.getElementById('cd-grid-secs');
+    if (minsEl) minsEl.value = '5';
+    if (secsEl) secsEl.value = '0';
+    cdGridRemainingSeconds = 300;
+    renderGridTimerDisplay();
 }
 
 function playGridTimerEndSound() {
@@ -66,7 +76,7 @@ function getGridConfiguredSeconds() {
     const mins = Math.max(0, Math.min(59, parseInt(minsEl?.value, 10) || 0));
     const secs = Math.max(0, Math.min(59, parseInt(secsEl?.value, 10) || 0));
     const total = mins * 60 + secs;
-    return total > 0 ? total : 60;
+    return total > 0 ? total : 300;
 }
 
 function renderGridTimerDisplay() {
@@ -288,18 +298,15 @@ function handleCDReattempt(targetText) {
 }
 
 function playClassDisplayGame() {
-    clearCDTimer();
+   clearCDTimer();
     const mode = document.getElementById('class-display-game-select').value;
     const gridTimerBar = document.getElementById('cd-grid-timer-bar');
 
     if (mode !== 'sentence-grid') {
-        clearGridTimer();
+        restoreDefaultGridTimer();
         if (gridTimerBar) gridTimerBar.style.display = 'none';
     } else {
         if (gridTimerBar) gridTimerBar.style.display = 'flex';
-        if (!cdGridIsRunning && !cdGridTimerInterval && cdGridRemainingSeconds <= 0) {
-            cdGridRemainingSeconds = getGridConfiguredSeconds();
-        }
         renderGridTimerDisplay();
     }
 
