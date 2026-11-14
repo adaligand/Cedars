@@ -2,41 +2,566 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Access Hub</title>
+    <title>Cedar1s Builder</title>
+    <link rel="icon" href="MFLbuilder/Assets/sb.png" type="image/png" />
+    <!-- PDF & File Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     
-    <!-- Updated CSS path to match Shared.css -->
-    <link rel="stylesheet" href="CSS/Shared.css">
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Google Identity Services & Classroom API Libraries -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
+    <!-- Modular Stylesheets (loaded in original cascade order) -->
+    <link rel="stylesheet" href="MFLbuilder/base.css">
+    <link rel="stylesheet" href="MFLbuilder/library.css">
+    <link rel="stylesheet" href="MFLbuilder/editor.css">
+    <link rel="stylesheet" href="MFLbuilder/live-display.css">
+    <link rel="stylesheet" href="MFLbuilder/student.css">
 </head>
 <body>
-    <header>
-        <h1>Teacher Access Dashboard</h1>
-        <p>Main control panel for application modules.</p>
-    </header>
+   
+<!-- PERSISTENT TEACHER DASHBOARD BANNER -->
+<div id="teacher-navbar" style="display:none; background: white; padding: 12px 18px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div style="min-width: 130px;">
+            <h1 style="margin: 0; font-size: 20px; color: #1a1a1a; cursor: pointer;" onclick="showPage('library-page'); renderLibrary();">Dashboard</h1>
+            <p id="user-display" style="margin: 2px 0 0; color: #666; font-size: 12px;"></p>
+        </div>
+        <div id="language-nav-container" style="display: flex; gap: 6px; flex-grow: 1; justify-content: center;"></div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <button onclick="showPage('submissions-page'); loadTeacherSubmissions();" class="btn-info">📊 Submissions</button>
+            <button onclick="toggleBinView()" class="btn-outline">🗑️ Bin</button>
+            <input type="file" id="docx-import-input" accept=".docx" style="display:none;" onchange="handleDocxImport(event)">
+<button onclick="document.getElementById('docx-import-input').click()" class="btn-info">📥 Import (.docx)</button>
+            <button onclick="createNewProject()" class="btn-purple">🛠️ Create</button>
+            <button onclick="logout()" class="btn-outline">🔓 Sign Out</button>
+        </div>
+    </div>
+</div>
 
-    <nav aria-label="Main Navigation">
-        <ul class="nav-menu">
-            <li>
-                <a href="sbgenerator.html">SB Generator</a>
-            </li>
-            <li>
-                <a href="speakteacher.html">Speak Teacher Access</a>
-            </li>
-            <li>
-                <a href="speakmock.html">Speak Mock Tool</a>
-            </li>
-        </ul>
-    </nav>
+<!-- LOGIN PAGE -->
+<div id="login-page" class="page active-page">
+    <div id="login-card">
+        <h1>Sentence Builder</h1>
+        <p>Teacher Portal - Please sign in with school email.</p>
+        <button onclick="login()" class="btn-purple" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
+    </div>
+</div>
 
-    <main>
-        <section class="dashboard-welcome">
-            <h2>Select a Module</h2>
-            <p>Use the navigation menu above to open individual tools. Each module will load its own specific functionality and styles.</p>
-        </section>
-    </main>
+<!-- LIBRARY PAGE -->
+<div id="library-page" class="page">
+    <div id="library-content"></div>
+</div>
 
-    <!-- Global scripts (Ensure js/main.js and js/sharedfunctions.js exist in your repository) -->
-    <script src="js/main.js"></script>
-    <script src="js/shared.js"></script>
+<!-- BIN PAGE -->
+<div id="bin-page" class="page" style="display:none; padding:10px 0; min-height: 80vh;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid #ef4444; padding-bottom: 10px;">
+            <div>
+                <h2 style="color: #b91c1c; margin:0;">🗑️ Recycle Bin</h2>
+                <p style="color: #64748b; margin: 4px 0 0; font-size: 13px;">Review and restore deleted projects</p>
+            </div>
+            <button onclick="showPage('library-page')" class="btn-outline">← Back to Library</button>
+        </div>
+        <div id="bin-container"></div>
+    </div>
+</div>
+
+<!-- EDITOR PAGE -->
+<div id="editor-page" class="page">
+    <div class="editor-top-nav" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border-radius:8px; border: 1px solid #eee; margin-bottom:10px;">
+        <input type="text" id="builder-title" class="editor-header-input" placeholder="Untitled" style="flex-grow: 1; min-width: 200px;">
+        
+        <div class="meta-group" style="display: flex; align-items: center; gap: 8px;">
+            <select id="meta-lang" class="editor-header-input" onchange="updateMeta()">
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Spanish">Spanish</option>
+                <option value="EAL">EAL</option>
+            </select>
+            <select id="meta-year" class="editor-header-input" onchange="updateMeta()">
+                <option value="Year 9">Year 9</option>
+                <option value="GCSE">GCSE</option>
+                <option value="Year 12">Year 12</option>
+                <option value="Year 13">Year 13</option>
+            </select>
+            <select id="meta-topic-select" class="editor-header-input" onchange="handleTopicSelect()"></select>
+            <input type="text" id="meta-topic-new" class="editor-header-input" placeholder="New Topic..." style="display:none;">
+        </div>
+
+        <button onclick="saveToCloud()" class="btn-purple">💾 Save</button>
+        <span id="manual-save-status" style="margin-left:5px; font-weight:bold; color:#10b981;"></span>
+        <button onclick="deleteCurrentProjectFromEditor()" class="btn-danger">🗑️ Delete</button>
+    </div>
+
+<div class="toolbar" style="margin-top: 10px;">
+    <button onclick="showPage('library-page')" class="btn-outline" title="Back to Library" style="margin-right: 6px; font-weight: bold;">← Back</button>
+    <button onclick="undo()" title="Undo">↩️</button>
+    <button onclick="redo()" title="Redo">↪️</button>
+    <button onclick="toggleMode('add-row')">+ Row</button>
+    <button onclick="toggleMode('del-row')">- Row</button>
+    <button onclick="toggleMode('add-col')">+ Col</button>
+    <button onclick="toggleMode('del-col')">- Col</button>
+    <button onclick="splitSelected()">✂️ Split</button>
+    <button onclick="mergeSelected()">🔗 Merge</button>
+    <button onclick="openRoutesModal()" class="btn-purple" style="background:#8b5cf6;">🔀 Routes</button>
+    <button onclick="exportPDF()" class="btn-danger">📄 PDF</button>
+   <button onclick="openPreview()" class="btn-info">👁️ Sentence List</button>
+<button id="btn-fullscreen-builder" onclick="toggleFullscreenBuilder()" class="btn-purple" style="background:#059669;">🖥️ Fullscreen</button>
+<button onclick="openInteractiveClassDisplay()" class="btn-purple" style="background:#0284c7;">👩‍🏫 Live</button>
+    <button onclick="openActivityMenu()" class="btn-purple">📜 Worksheet & Assign</button>
+</div>
+
+    <div id="grid-container" class="grid-canvas"></div>
+
+    <div style="padding: 8px; text-align: center; border-top: 1px solid #eee; background: #f8fafc; margin-top:12px; border-radius:6px;">
+        <small id="autosave-indicator" style="color: #94a3b8; font-style: italic;">
+            Waiting for first save...
+        </small>
+    </div>
+</div>
+
+<!-- TEACHER SUBMISSIONS PAGE -->
+<div id="submissions-page" class="page">
+    <div class="dashboard-card" style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-size:20px;">📊 Student Submissions</h2>
+            <button onclick="showPage('library-page')" class="btn-outline">← Back to Library</button>
+        </div>
+    </div>
+
+    <div class="student-card" style="display:flex; gap:15px; margin-bottom:15px;">
+        <div style="flex:1;">
+            <label><b>Classroom Course:</b></label>
+            <select id="sub-filter-course" onchange="loadCourseAssignments(this.value)"></select>
+        </div>
+        <div style="flex:1;">
+            <label><b>Assignment:</b></label>
+            <select id="sub-filter-assignment" onchange="renderStudentSubmissionsTable()"></select>
+        </div>
+    </div>
+
+    <!-- Active Assignment Banner -->
+<!-- Active Assignment Banner -->
+<!-- Active Assignment Banner -->
+<div id="active-assignment-info" style="display:none; margin-bottom: 20px; padding: 15px; border-radius: 8px; background-color: #fdf6e2; border: 1px solid #f39c12; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <strong id="active-task-title" style="color: #d35400; font-size: 16px;">Active Assignment</strong>
+            <span id="submission-counter-badge" style="background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 13px;">
+                📥 0 Submitted
+            </span>
+        </div>
+        <div id="active-task-metadata" style="font-size: 12px; color: #7f8c8d; margin-top: 4px;">Language: -- | Topic: --</div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button id="preview-assigned-task-btn" onclick="previewActiveAssignmentAsStudent()" class="btn-info" style="font-size: 12px; padding: 6px 12px; height:auto;">👁️ Student Preview</button>
+        <button id="download-assigned-worksheet-btn" onclick="downloadActiveAssignmentWorksheet()" class="btn-info" style="font-size: 12px; padding: 6px 12px; height:auto; background:#2563eb;">📄 Download Worksheet</button>
+        <button id="duplicate-assigned-task-btn" onclick="duplicateCurrentAssignmentToClass()" class="btn-purple" style="font-size: 12px; padding: 6px 12px; height:auto; background:#10b981;">📋 Duplicate to Class</button>
+        <button id="sync-all-classroom-grades-btn" onclick="syncAllClassroomGrades()" class="btn-info" style="font-size: 12px; padding: 6px 12px; height:auto;">🔄 Sync Grades to Classroom</button>
+        <button id="edit-assigned-task-btn" onclick="editCurrentAssignment()" class="btn-purple" style="font-size: 12px; padding: 6px 12px; background: #f39c12; height:auto;">📝 Edit Assignment</button>
+        <button id="delete-assigned-task-btn" onclick="deleteCurrentAssignment()" class="btn-danger" style="font-size: 12px; padding: 6px 12px; height:auto;">🗑️ Delete Assignment</button>
+    </div>
+</div>
+
+    <div class="student-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Submission Time</th>
+                    <th>Auto Score</th>
+                    <th>Teacher Grade Override</th>
+                    <th>Teacher Feedback Comment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="submissions-table-body">
+                <tr><td colspan="7" style="text-align:center; color:#64748b;">Select a course and assignment to view grades.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- STUDENT PORTAL PAGE -->
+<div id="student-portal-page" class="page">
+    <div style="max-width:850px; margin:0 auto; padding:15px;">
+        
+        <!-- Teacher Preview Banner -->
+        <div id="teacher-preview-banner" style="display:none; background:#fef3c7; border:2px solid #f59e0b; padding:12px 18px; border-radius:10px; margin-bottom:15px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <span style="font-weight:bold; color:#92400e; font-size:15px; display:flex; align-items:center; gap:6px;">
+                👁️ <span>Teacher Preview Mode</span>
+            </span>
+            <button onclick="exitTeacherPreview()" class="btn-purple" style="background:#f59e0b; font-size:13px; padding:8px 16px; margin:0;">
+                ← Exit Preview
+            </button>
+        </div>
+
+        <!-- Student Auth Landing Header -->
+        <div class="student-card" id="student-auth-header" style="text-align:center; padding:30px 20px;">
+    <h2 id="student-task-title" style="margin-top:0;">Interactive Language Activity</h2>
+    <p id="student-auth-instruction-text" style="color:#64748b; font-size:15px;">Please sign in with your Cedars Google Account (@cedarsupper.co.uk) to access and complete your assignment.</p>
+    
+    <div id="student-login-box" style="margin-top:20px;">
+        <button onclick="studentLogin()" class="btn-purple" style="padding:12px 24px; font-size:16px;">
+            🔑 Sign in with Google (@cedarsupper.co.uk)
+        </button>
+    </div>
+
+   <div id="student-profile-badge" style="display:none; background:#f1f5f9; padding:10px 16px; border-radius:8px; margin-top:15px;">
+        <span style="color:#475569; font-weight:bold;">Signed in as: </span>
+        <span id="student-display-name" style="color:#0f172a; font-weight:bold;"></span> 
+        <span id="student-display-email" style="color:#2563eb; margin-left:8px;"></span>
+    </div>
+</div>
+
+        <!-- REFERENCE TABLE BANNER IF 'STUDY' IS SELECTED -->
+        <div id="student-reference-banner" style="display:none;" class="student-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleReferenceTable()">
+                <h3 style="margin:0; color:#0f172a; font-size:16px;">📖 Sentence Reference Table</h3>
+                <span id="ref-toggle-icon">▼ Show</span>
+            </div>
+            <div id="ref-table-body" style="display:none; margin-top:10px;"></div>
+        </div>
+
+        <!-- PENDING TEACHER REVIEW VIEW (HIDE INSTANT MARKING / SCORE) -->
+        <div id="student-pending-review-card" class="student-card" style="display:none; text-align:center; padding:30px; border:2px solid #3b82f6;">
+            <div style="background:#eff6ff; padding:20px; border-radius:8px; border:1px solid #bfdbfe;">
+                <h3 style="margin:0 0 10px 0; color:#1e40af; font-size:20px;">✅ Assignment Submitted Successfully!</h3>
+                <p style="margin:0; color:#1e3a8a; font-size:15px; line-height:1.5;">
+                    Your work has been submitted to your teacher for review.<br>
+                    Once your teacher has reviewed your answers and synced your grade, your overall result and detailed feedback will appear here.
+                </p>
+            </div>
+        </div>
+
+        <!-- DYNAMIC MARKSHEET REVIEW VIEW (RELEASED AFTER TEACHER REVIEW) -->
+        <div id="student-marksheet-card" class="student-card" style="display:none; border:2px solid #10b981;">
+            <div style="background:#d1fae5; padding:15px; border-radius:8px; border:1px solid #a7f3d0; margin-bottom:15px;">
+                <h3 style="margin:0 0 6px 0; color:#065f46;">✅ Assignment Completed & Marked</h3>
+                <p style="margin:0; color:#047857; font-size:14px;">Review your score, teacher feedback, and itemized exercise corrections below.</p>
+            </div>
+            <div id="marksheet-summary-header" style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:15px;"></div>
+            <div id="marksheet-report-content"></div>
+        </div>
+
+        <!-- DYNAMIC SINGLE EXERCISE WORKFLOW CONTAINER -->
+        <div id="student-active-exercise-card" class="student-card" style="display:none;"></div>
+
+        <!-- ON-SCREEN SPECIAL CHARACTER KEYBOARD -->
+        <div id="virtual-keyboard-bar" style="background:transparent; padding:6px 0; border-radius:8px; margin-bottom:10px; display:none; gap:6px; flex-wrap:wrap; justify-content:center;"></div>
+
+    <!-- STUDENT NAVIGATION ACTION BUTTONS -->
+        <div id="student-nav-actions" style="display:none; justify-content:space-between; gap:10px; margin-top:10px;">
+            <button id="student-prev-ex-btn" onclick="prevStudentExercise()" class="btn-purple" style="flex:1; height:44px; font-size:15px; margin:0; display:none;">
+                ⬅️ Previous Exercise
+            </button>
+            <button id="student-submit-ex-btn" onclick="submitCurrentExercise()" class="btn-purple" style="flex:1; height:44px; font-size:15px; margin:0; background:#2563eb; display:none;">
+                💾 Submit Exercise
+            </button>
+            <button id="student-next-ex-btn" onclick="nextStudentExercise()" class="btn-purple" style="flex:1; height:44px; font-size:15px; margin:0; display:none;">
+                Next Exercise ➡️
+            </button>
+            <button id="student-submit-btn" onclick="submitStudentWork()" class="btn-purple" style="flex:1; height:44px; font-size:15px; margin:0; background:#10b981; display:none;">
+                ✅ Submit Final Assignment
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- OVERLAY & MODALS -->
+<div id="overlay" class="overlay" onclick="closeModals()"></div>
+
+<!-- INSPECT STUDENT ANSWERS MODAL (TEACHER EDIT SENTENCE MARKS /1) -->
+<div id="answers-modal" class="modal">
+    <h3 style="margin-top:0; color:#0f172a;">🔍 Submitted Answers & Sentence Marks Inspector</h3>
+    <div id="answers-modal-content"></div>
+    <button onclick="closeModals()" class="btn-outline" style="width:100%; margin-top:15px; height:40px;">Close</button>
+</div>
+
+<div id="new-modal" class="modal" style="width:400px;">
+    <h2 style="margin-top:0;">New Builder</h2>
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+            <label>Language</label>
+            <select id="new-lang" style="width:100%; padding:8px;">
+                <option>French</option><option>German</option><option>Spanish</option><option>EAL</option>
+            </select>
+        </div>
+        <div>
+            <label>Year Group</label>
+            <select id="new-year" style="width:100%; padding:8px;">
+                <option>Year 9</option><option>GCSE</option><option>Year 12</option><option>Year 13</option>
+            </select>
+        </div>
+        <div>
+            <label>Topic</label>
+            <input type="text" id="new-topic" placeholder="e.g. Holidays" style="width:100%; padding:8px; box-sizing:border-box;">
+        </div>
+        <button onclick="createNewProject()" class="btn-purple">Create Builder</button>
+    </div>
+</div>
+
+<div id="preview-modal" class="modal">
+    <h3 style="margin-top:0;">Sentence List Preview</h3>
+    <div id="preview-content" style="background:#fafafa; padding:15px; border-radius:8px; max-height: 60vh; overflow-y: auto;"></div>
+    <button onclick="closeModals()" style="width:100%; margin-top:15px; height: 40px; font-weight: bold; border:1px solid #ccc; cursor:pointer;">Close</button>
+</div>
+<!-- SB ROUTES / CELL COMBOS MODAL -->
+<div id="routes-modal" class="modal" style="width: 98vw; max-width: 1750px; height: 116vh; max-height: 116vh; flex-direction: column; overflow: hidden; padding: 20px; box-sizing: border-box; display: none;">
+    
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px; flex-shrink: 0;">
+        <h2 style="margin:0; font-size: 20px; color: #1e293b;">🔀 SB Routes / 🔲 Cell Combos</h2>
+        <button onclick="closeModals()" class="btn-outline" style="padding: 4px 10px; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- Main Side-by-Side Content Container (Asymmetric 1fr : 380px split) -->
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; flex: 1; min-height: 0; overflow: hidden;">
+        
+        <!-- LEFT COLUMN: Expanded Table Preview Grid -->
+        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; flex-shrink: 0;">
+                <strong style="font-size: 13px; color: #334155;">Sentence Builder Table Preview</strong>
+                <span id="routes-preview-tip" style="font-size: 11px; color: #64748b; font-style: italic;">Hover over a route to highlight</span>
+            </div>
+            <!-- Scrollable Preview Grid -->
+            <div id="routes-mini-grid" style="flex: 1; overflow: auto; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white;"></div>
+        </div>
+
+        <!-- RIGHT COLUMN: Compact Settings Panel (Fixed 380px Width) -->
+        <div style="display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            
+<div style="display: flex; gap: 6px; border-bottom: 2px solid #cbd5e1; margin-bottom: 12px; flex-shrink: 0;">
+    <button id="tab-btn-routes" onclick="switchRoutesTab('routes')" class="btn" style="background: #8b5cf6; color: white; border: none; border-radius: 6px 6px 0 0; margin: 0; padding: 8px 10px; cursor: pointer; flex: 1; font-size: 12px;">🔀 Routes</button>
+    <button id="tab-btn-combos" onclick="switchRoutesTab('combos')" class="btn" style="background: #e2e8f0; color: #475569; border: none; border-radius: 6px 6px 0 0; margin: 0; padding: 8px 10px; cursor: pointer; flex: 1; font-size: 12px;">🔲 Combos</button>
+    <button id="tab-btn-transforms" onclick="switchRoutesTab('transforms')" class="btn" style="background: #e2e8f0; color: #475569; border: none; border-radius: 6px 6px 0 0; margin: 0; padding: 8px 10px; cursor: pointer; flex: 1; font-size: 12px;">✏️ Transforms</button>
+</div>
+
+            <!-- Tab 1: SB Routes -->
+            <div id="tab-content-routes" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+                <p style="color: #475569; font-size: 12px; margin: 0 0 8px 0; flex-shrink: 0;">
+                    Unchecking a route excludes it from sentence generation.
+                </p>
+                <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-shrink: 0;">
+                    <button onclick="selectAllRoutes(true)" class="btn" style="font-size: 12px; padding: 4px 10px;">Select All</button>
+                    <button onclick="selectAllRoutes(false)" class="btn" style="font-size: 12px; padding: 4px 10px;">Deselect All</button>
+                </div>
+                <!-- Independently Scrollable Route List -->
+                <div id="routes-list-container" style="flex: 1; min-height: 0; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: white;"></div>
+            </div>
+
+<!-- Tab 2: Cell Combos -->
+            <div id="tab-content-combos" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;">
+                <p style="color: #475569; font-size: 12px; margin: 0 0 8px 0; flex-shrink: 0;">
+                    Cell combos define available routes without managing every route individually.
+                </p>
+
+                <!-- Interactive Picker Status Banner -->
+                <div id="combo-picker-status" style="display: none; margin-bottom: 12px; background: #fffbebfb; border: 2px dashed #f59e0b; padding: 10px; border-radius: 8px; text-align: center; flex-shrink: 0;">
+                    <div id="combo-picker-prompt" style="font-weight: bold; color: #b45309; font-size: 12px; margin-bottom: 6px;"></div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="saveCurrentCombo()" class="btn-purple" style="font-size: 12px; padding: 4px 12px; margin: 0;">Save Combo</button>
+                        <button onclick="cancelComboPicker()" class="btn-outline" style="font-size: 12px; padding: 4px 12px; margin: 0;">Cancel</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Excluded Cell Combos -->
+                    <div style="border: 1px solid #fca5a5; background: #fff5f5; border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: #b91c1c; font-size: 12px;">🚫 Excluded combos</strong>
+                            <button onclick="startComboPicker('excluded')" class="btn-danger" style="font-size: 11px; padding: 3px 8px; margin: 0;">+ Add new</button>
+                        </div>
+                        <ul style="font-size: 11px; color: #7f1d1d; margin: 0 0 8px 0; padding-left: 16px;">
+                            <li>Non-viable combinations (min 2 cells).</li>
+                        </ul>
+                        <div id="excluded-combos-list" style="max-height: 160px; overflow-y: auto;"></div>
+                    </div>
+
+                    <!-- Required Cell Combos -->
+                    <div style="border: 1px solid #86efac; background: #f0fdf4; border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: #15803d; font-size: 12px;">⚠️ Required combos</strong>
+                            <button onclick="startComboPicker('required')" class="btn-purple" style="background: #10b981; border: none; font-size: 11px; padding: 3px 8px; margin: 0;">+ Add new</button>
+                        </div>
+                        <ul style="font-size: 11px; color: #14532d; margin: 0 0 8px 0; padding-left: 16px;">
+                            <li>Cell 1 must only appear with Cell 2.</li>
+                        </ul>
+                        <div id="required-combos-list" style="max-height: 160px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+<!-- Tab 3: Transformations -->
+<div id="tab-content-transforms" style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;">
+    <p style="color: #475569; font-size: 12px; margin: 0 0 8px 0; flex-shrink: 0;">
+        Enter rules (one per line):
+    </p>
+   <ul style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; padding-left: 16px; flex-shrink: 0;">
+        <li><b>word1 word2=word3</b> (replaces sequence)</li>
+        <li><b>word1+word3=replacement</b> (replaces outer words around middle text)</li>
+        <li><b>word=</b> (deletes)</li>
+        <li><b>word1*word2</b> (excludes combo)</li>
+    </ul>
+   <textarea id="transformations-input" 
+    style="flex: 1; min-height: 180px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace; font-size: 12px; outline: none; resize: none;" 
+    placeholder="Have eaten=ate&#10;like+not=don't like&#10;(m)=&#10;n'est pas*assez" 
+    oninput="transformationsText = this.value;"></textarea>
+</div>
+        </div> <!-- Closes Right Column -->
+    </div> <!-- Closes Main Side-by-Side Grid Container -->
+
+    <!-- Modal Actions Footer -->
+    <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0;">
+        <button onclick="saveRoutesAndCombos()" class="btn-purple" style="padding: 8px 24px;">Save Changes</button>
+        <button onclick="closeModals()" class="btn-outline" style="padding: 8px 20px;">Cancel</button>
+    </div>
+</div> <!-- Closes routes-modal -->
+
+<!-- OPTIONS / ASSIGNMENT MENU MODAL -->
+<div id="activity-menu" class="modal">
+    <!-- Modal Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-shrink: 0;">
+        <h2 style="margin:0; font-size: 20px; color: #1e293b;">📜 Worksheet & Interactive Task Options</h2>
+        <button onclick="closeModals()" class="btn-outline" style="padding: 4px 10px; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- 3-Column Asymmetric Layout -->
+    <div style="display: grid; grid-template-columns: 280px minmax(0, 1fr) 380px; gap: 16px; flex: 1; min-height: 0; overflow: hidden;">
+        
+        <!-- LEFT COLUMN: Activity Selection -->
+        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <strong style="font-size: 13px; color: #334155;">1. Select Activities</strong>
+                <span style="font-size: 12px; display:flex; align-items:center; gap:4px;">
+                    <input type="checkbox" id="sel-all" onchange="toggleAllActivities(this)"> 
+                    <label for="sel-all" style="cursor:pointer; font-weight:bold;">All</label>
+                </span>
+            </div>
+            <div id="activity-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+        </div>
+
+        <!-- MIDDLE COLUMN: Per-Exercise Sentence Customization -->
+        <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+            <div style="margin-bottom: 10px; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <strong style="font-size: 13px; color: #334155;">2. Customize Exercise Sentences</strong>
+                <p style="color:#64748b; font-size:11px; margin: 2px 0 0 0;">Click any exercise header below to expand/collapse sentences.</p>
+            </div>
+            <div id="per-activity-sentences-container" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 6px;"></div>
+        </div>
+
+        <!-- RIGHT COLUMN: Options & Classroom Publication -->
+        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;">
+            <strong style="font-size: 13px; color: #334155; margin-bottom: 10px; display: block; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">3. Options & Publication</strong>
+            
+            <!-- Sentence Counts -->
+            <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size: 12px; font-weight: bold; color: #475569;">Exercise Sentence Count:</label>
+                    <select id="sentence-count" onchange="renderPerActivitySentenceBoxes()" style="padding:4px 8px; border-radius:4px; border:1px solid #cbd5e1; font-size:12px;">
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10" selected>10</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size: 12px; font-weight: bold; color: #475569;">Sentence Table Count:</label>
+                    <select id="table-sentence-count" onchange="renderPerActivitySentenceBoxes()" style="padding:4px 8px; border-radius:4px; border:1px solid #cbd5e1; font-size:12px;">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Primary Actions -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                <button onclick="generateWorksheet()" class="btn-info" style="width: 100%; height: 38px; font-size: 13px; margin: 0;">📄 Download Word Worksheet</button>
+                <button onclick="openClassroomPublishSection()" class="btn-purple" style="width: 100%; height: 38px; font-size: 13px; margin: 0;">🚀 Assign to Google Classroom</button>
+            </div>
+
+            <!-- Google Classroom Assign Section -->
+            <div id="classroom-assign-fields" style="display:none; border-top:2px dashed #cbd5e1; padding-top:10px; margin-top:4px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #1e293b;">🏫 Publish to Google Classroom</h4>
+                
+                <label style="font-size:11px; font-weight:bold;">Select Course:</label>
+                <select id="gc-course-select" style="width:100%; padding:6px; margin:3px 0 8px 0; font-size:12px;" onchange="loadCourseTopics(this.value)"></select>
+
+                <label style="font-size:11px; font-weight:bold;">Classroom Topic:</label>
+                <select id="gc-topic-select" style="width:100%; padding:6px; margin:3px 0 8px 0; font-size:12px;">
+                    <option value="">-- No Topic --</option>
+                </select>
+
+                <label style="font-size:11px; font-weight:bold;">Due Date & Time (Optional):</label>
+                <input type="datetime-local" id="gc-due-date" style="width:100%; padding:6px; margin:3px 0 8px 0; font-size:12px; box-sizing:border-box;">
+
+                <label style="font-size:11px; font-weight:bold;">Schedule Date & Time (Optional):</label>
+                <input type="datetime-local" id="gc-schedule-date" style="width:100%; padding:6px; margin:3px 0 8px 0; font-size:12px; box-sizing:border-box;">
+
+                <button id="gc-publish-btn" onclick="publishTaskToClassroom()" class="btn-purple" style="width:100%; height:38px; font-size:13px; margin-top:6px;">📢 Publish Assignment Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="margin-top: 12px; display: flex; justify-content: flex-end; flex-shrink: 0;">
+        <button onclick="closeModals()" class="btn-outline" style="padding: 6px 20px; font-size: 13px;">Close</button>
+    </div>
+</div>
+<!-- INTERACTIVE CLASS DISPLAY MODAL (PLACED OUTSIDE AND AFTER ACTIVITY-MENU) -->
+<div id="class-display-modal" class="modal">
+    <div id="class-display-header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h2 style="margin:0; font-size: 22px; color: #0f172a;">👩‍🏫 Live Activities</h2>
+    <select id="class-display-game-select" onchange="handleClassDisplayActivityChange();">
+    <option value="no-spaces">No Spaces</option>
+    <option value="unjumble">Unjumble Sentences</option>
+    <option value="no-vowels">Missing Vowels</option>
+    <option value="no-consonants">Missing Consonants</option>
+    <option value="random-target">Random Target Language</option>
+    <option value="random-en">Random English</option>
+    <option value="listen-trad">🎧 Gapped Translation</option>
+    <option value="listen-dictation">🎧 Dictation</option>
+    <option value="delayed-dictation">🎧Delayed Dictation</option>
+    <option value="delayed-copying">Delayed Copying</option>
+    <option value="match-up">Match Up</option>
+    <option value="sentence-grid">Translation Grid</option>
+</select>
+        </div>
+        <button onclick="closeModals()" class="btn-outline" style="padding: 6px 14px; font-size: 16px; font-weight: bold; cursor: pointer;">✕ Close</button>
+    </div>
+
+    <div id="class-display-content">
+        <!-- Interactive sentence activities render dynamically here -->
+    </div>
+</div>
+
+    <!-- Modular Scripts (loaded in dependency order) -->
+    <script src="MFLbuilder/core.js"></script>
+    <script src="MFLbuilder/library.js"></script>
+    <script src="MFLbuilder/editor.js"></script>
+    <script src="MFLbuilder/routes-activities.js"></script>
+    <script src="MFLbuilder/live-display.js"></script>
+    <script src="MFLbuilder/classroom-teacher.js"></script>
+    <script src="MFLbuilder/student.js"></script>
 </body>
 </html>
