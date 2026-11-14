@@ -452,13 +452,16 @@ function playClassDisplayMatchUp(allSentences) {
 
     const shuffled = shuffleArray(allSentences);
     const gamePairs = shuffled.slice(0, NUM_PAIRS);
-    const distractors = shuffled.slice(NUM_PAIRS, totalNeeded).map(d => d.tr);
+    const distractorItems = shuffled.slice(NUM_PAIRS, totalNeeded);
 
     const leftSide = gamePairs.map(p => p.t);
-    let rightSide = shuffleArray(gamePairs.map(p => p.tr).concat(distractors));
+    const rightSide = shuffleArray([
+        ...gamePairs.map((p, pairIdx) => ({ tr: p.tr, t: p.t, isDistractor: false, pairIdx })),
+        ...distractorItems.map(d => ({ tr: d.tr, t: d.t, isDistractor: true, pairIdx: -1 }))
+    ]);
 
-    let leftHTML = leftSide.map((sent, i) => {
-        const rightIndex = rightSide.indexOf(gamePairs[i].tr);
+    const leftHTML = leftSide.map((sent, i) => {
+        const rightIndex = rightSide.findIndex(r => !r.isDistractor && r.pairIdx === i);
         const correctLetter = rightIndex >= 0 ? String.fromCharCode(65 + rightIndex) : '';
         return `
             <li style="font-size: ${fontSize}; line-height: ${lineHeight}; display: flex; align-items: baseline; padding: 2px 0;">
@@ -469,13 +472,20 @@ function playClassDisplayMatchUp(allSentences) {
         `;
     }).join('');
 
-    let rightHTML = rightSide.map((sent, i) => {
-        const isDistractor = distractors.includes(sent);
-        const styleColor = (isAnswerRevealed && isDistractor) ? 'color: #ef4444; opacity: 0.7;' : '';
+    const rightHTML = rightSide.map((item, i) => {
+        const revealedDistractorStyle = (isAnswerRevealed && item.isDistractor)
+            ? 'color: #ef4444; cursor: pointer;'
+            : '';
+        const titleAttr = (isAnswerRevealed && item.isDistractor)
+            ? 'title="Click to show/hide Target Language"'
+            : '';
         return `
-            <li style="font-size: ${fontSize}; line-height: ${lineHeight}; display: flex; align-items: baseline; padding: 2px 0; ${styleColor}" data-text="${sent.replace(/"/g, '&quot;')}">
+            <li class="${item.isDistractor ? 'cd-match-distractor' : ''}" data-distractor="${item.isDistractor ? '1' : '0'}" ${titleAttr} style="font-size: ${fontSize}; line-height: ${lineHeight}; display: flex; align-items: baseline; padding: 2px 0; ${revealedDistractorStyle}">
                 <span style="font-weight: bold; margin-right: 10px; color: #8b5cf6;">${String.fromCharCode(65 + i)}.</span>
-                <span>${sent}</span>
+                <div style="display: flex; flex-direction: column;">
+                    <span>${item.tr}</span>
+                    ${item.isDistractor ? `<span class="cd-distractor-tl" style="display: none; color: #16a34a; font-size: 0.82em; font-weight: 600; margin-top: 2px;">${item.t}</span>` : ''}
+                </div>
             </li>
         `;
     }).join('');
@@ -483,11 +493,11 @@ function playClassDisplayMatchUp(allSentences) {
     document.getElementById('class-display-content').innerHTML = `
         <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; width: 100%; box-sizing: border-box;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; text-align: left; flex: 1; min-height: 0;">
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;">
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow-y: auto;">
                     <h3 style="margin-top: 0; margin-bottom: 8px; color: #1e293b; border-bottom: 2px solid #8b5cf6; padding-bottom: 6px; font-size: 1.3rem; flex-shrink: 0;">Target Language</h3>
                     <ul style="list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly;">${leftHTML}</ul>
                 </div>
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;">
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow-y: auto;">
                     <h3 style="margin-top: 0; margin-bottom: 8px; color: #1e293b; border-bottom: 2px solid #10b981; padding-bottom: 6px; font-size: 1.3rem; flex-shrink: 0;">English Translations</h3>
                     <ul id="cd-match-right-list" style="list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly;">${rightHTML}</ul>
                 </div>
@@ -499,10 +509,21 @@ function playClassDisplayMatchUp(allSentences) {
         </div>
     `;
 
+    // Allow clicking each red distractor once answers are revealed to toggle its TL below
+    document.querySelectorAll('#cd-match-right-list li.cd-match-distractor').forEach(li => {
+        li.onclick = function() {
+            if (!isAnswerRevealed) return;
+            const tlSpan = this.querySelector('.cd-distractor-tl');
+            if (tlSpan) {
+                tlSpan.style.display = (tlSpan.style.display === 'none') ? 'block' : 'none';
+            }
+        };
+    });
+
     document.getElementById('cd-reveal-match-btn').onclick = function() {
         isAnswerRevealed = !isAnswerRevealed;
         gamePairs.forEach((pair, idx) => {
-            const rightIndex = rightSide.indexOf(pair.tr);
+            const rightIndex = rightSide.findIndex(r => !r.isDistractor && r.pairIdx === idx);
             const correctLetter = rightIndex >= 0 ? String.fromCharCode(65 + rightIndex) : '';
             const letterSpans = document.querySelectorAll('.match-ans-letter');
             if (letterSpans[idx]) {
@@ -510,17 +531,19 @@ function playClassDisplayMatchUp(allSentences) {
             }
         });
 
-        document.querySelectorAll('#cd-match-right-list li').forEach(li => {
-            const txt = li.getAttribute('data-text');
-            if (distractors.includes(txt)) {
-                li.style.color = isAnswerRevealed ? '#ef4444' : '';
-                li.style.opacity = isAnswerRevealed ? '0.7' : '1';
+        document.querySelectorAll('#cd-match-right-list li.cd-match-distractor').forEach(li => {
+            li.style.color = isAnswerRevealed ? '#ef4444' : '';
+            li.style.cursor = isAnswerRevealed ? 'pointer' : 'default';
+            li.title = isAnswerRevealed ? 'Click to show/hide Target Language' : '';
+
+            const tlSpan = li.querySelector('.cd-distractor-tl');
+            if (tlSpan && !isAnswerRevealed) {
+                tlSpan.style.display = 'none';
             }
         });
         this.innerHTML = isAnswerRevealed ? '🙈 Hide' : '🔍 Reveal';
     };
 }
-
 function playClassDisplayGrid(allSentences) {
     const NUM_CELLS = 12;
     if (allSentences.length < NUM_CELLS) {
