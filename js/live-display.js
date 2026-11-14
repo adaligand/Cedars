@@ -1,5 +1,5 @@
 /* =========================================================
-   INTERACTIVE CLASS DISPLAY ENGINE
+   INTERACTIVE CLASS DISPLAY ENGINE 
    ========================================================= */
 let currentClassDisplayIndex = 0;
 let isAnswerRevealed = false;
