@@ -1452,8 +1452,64 @@ function isExcludedCombination(partsMeta) {
 }
 
 function toggleMode(mode) { currentMode = (currentMode === mode) ? null : mode; render(false); }
-function insertRow(i) { grid.splice(i, 0, Array.from({length: grid[0].length}, () => c())); currentMode = null; render(); saveToCloud(true); }
-function insertCol(i) { grid.forEach(r => r.splice(i, 0, c())); currentMode = null; render(); saveToCloud(true); }
+function insertRow(i) {
+    if (!grid || !grid.length) return;
+    sanitizeGrid();
+    const numCols = Math.max(...grid.map(r => r.length), 1);
+
+    // Expand any vertical merge whose span crosses insertion index i
+    grid.forEach((row, r) => {
+        row.forEach(cell => {
+            if (cell && !cell.hidden) {
+                const rS = cell.rS || 1;
+                if (r < i && i < r + rS) {
+                    cell.rS = rS + 1;
+                }
+            }
+        });
+    });
+
+    if (Array.isArray(excludedPairs)) {
+        excludedPairs.forEach(pair => {
+            if (pair.a.r >= i) pair.a.r += 1;
+            if (pair.b.r >= i) pair.b.r += 1;
+        });
+    }
+
+    grid.splice(i, 0, Array.from({ length: numCols }, () => c()));
+    currentMode = null;
+    render();
+    saveToCloud(true);
+}
+
+function insertCol(i) {
+    if (!grid || !grid.length) return;
+    sanitizeGrid();
+
+    // Expand any horizontal merge whose span crosses insertion index i
+    grid.forEach(row => {
+        row.forEach((cell, cIdx) => {
+            if (cell && !cell.hidden) {
+                const cS = cell.cS || 1;
+                if (cIdx < i && i < cIdx + cS) {
+                    cell.cS = cS + 1;
+                }
+            }
+        });
+    });
+
+    if (Array.isArray(excludedPairs)) {
+        excludedPairs.forEach(pair => {
+            if (pair.a.c >= i) pair.a.c += 1;
+            if (pair.b.c >= i) pair.b.c += 1;
+        });
+    }
+
+    grid.forEach(r => r.splice(i, 0, c()));
+    currentMode = null;
+    render();
+    saveToCloud(true);
+}
 
 function deleteCol(cIdx) {
     if (!grid || !grid.length) return;
@@ -1463,25 +1519,50 @@ function deleteCol(cIdx) {
         return;
     }
 
-    // Safely unmerge all spans before splicing columns to prevent matrix corruption
-    grid.forEach(row => {
-        row.forEach(cell => {
-            if (cell) {
-                cell.rS = 1;
-                cell.cS = 1;
-                cell.hidden = false;
+    sanitizeGrid();
+
+    // Preserve horizontal merges: shrink or shift root cell to cIdx + 1
+    grid.forEach((row, r) => {
+        row.forEach((cell, cPos) => {
+            if (!cell || cell.hidden) return;
+            const rS = cell.rS || 1;
+            const cS = cell.cS || 1;
+
+            if (cPos === cIdx && cS > 1) {
+                const nextCell = grid[r][cPos + 1];
+                if (nextCell) {
+                    nextCell.items = JSON.parse(JSON.stringify(cell.items || [{ t: "", tr: "" }]));
+                    nextCell.color = cell.color || "#ffffff";
+                    nextCell.split = cell.split || false;
+                    nextCell.compact = !!cell.compact;
+                    nextCell.rS = rS;
+                    nextCell.cS = cS - 1;
+                    nextCell.hidden = false;
+                }
+            } else if (cPos < cIdx && cIdx < cPos + cS) {
+                cell.cS = cS - 1;
             }
         });
     });
 
-    // Remove column from every row
     grid.forEach(row => {
         if (cIdx < row.length) {
             row.splice(cIdx, 1);
         }
     });
 
+    if (Array.isArray(excludedPairs)) {
+        excludedPairs = excludedPairs
+            .filter(pair => pair.a.c !== cIdx && pair.b.c !== cIdx)
+            .map(pair => ({
+                a: { r: pair.a.r, c: pair.a.c > cIdx ? pair.a.c - 1 : pair.a.c },
+                b: { r: pair.b.r, c: pair.b.c > cIdx ? pair.b.c - 1 : pair.b.c }
+            }));
+    }
+
+    currentMode = null;
     render(true);
+    saveToCloud(true);
 }
 
 function deleteRow(rIdx) {
@@ -1490,21 +1571,47 @@ function deleteRow(rIdx) {
         return;
     }
 
-    // Safely unmerge all spans before splicing rows
-    grid.forEach(row => {
-        row.forEach(cell => {
-            if (cell) {
-                cell.rS = 1;
-                cell.cS = 1;
-                cell.hidden = false;
+    sanitizeGrid();
+
+    // Preserve vertical merges: shrink or shift root cell to rIdx + 1
+    grid.forEach((row, r) => {
+        row.forEach((cell, cPos) => {
+            if (!cell || cell.hidden) return;
+            const rS = cell.rS || 1;
+            const cS = cell.cS || 1;
+
+            if (r === rIdx && rS > 1) {
+                const nextCell = grid[r + 1]?.[cPos];
+                if (nextCell) {
+                    nextCell.items = JSON.parse(JSON.stringify(cell.items || [{ t: "", tr: "" }]));
+                    nextCell.color = cell.color || "#ffffff";
+                    nextCell.split = cell.split || false;
+                    nextCell.compact = !!cell.compact;
+                    nextCell.rS = rS - 1;
+                    nextCell.cS = cS;
+                    nextCell.hidden = false;
+                }
+            } else if (r < rIdx && rIdx < r + rS) {
+                cell.rS = rS - 1;
             }
         });
     });
 
     grid.splice(rIdx, 1);
-    render(true);
-}
 
+    if (Array.isArray(excludedPairs)) {
+        excludedPairs = excludedPairs
+            .filter(pair => pair.a.r !== rIdx && pair.b.r !== rIdx)
+            .map(pair => ({
+                a: { r: pair.a.r > rIdx ? pair.a.r - 1 : pair.a.r, c: pair.a.c },
+                b: { r: pair.b.r > rIdx ? pair.b.r - 1 : pair.b.r, c: pair.b.c }
+            }));
+    }
+
+    currentMode = null;
+    render(true);
+    saveToCloud(true);
+}
 function splitCell(r, c) {
     if (!grid[r] || !grid[r][c]) return;
     const cell = grid[r][c];
