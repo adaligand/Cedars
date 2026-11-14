@@ -99,10 +99,10 @@ function handleClassDisplayActivityChange() {
     playClassDisplayGame();
 }
 
-// Clean brackets from English sentences
+// Clean empty brackets from English sentences while preserving annotations like (pl)
 function cleanEnglishText(text) {
     if (!text) return '';
-    return text.replace(/[\(\)]/g, '').trim();
+    return text.replace(/\(\s*\)/g, '').replace(/\s+/g, ' ').trim();
 }
 
 // Format missing characters with distinct single underlines and wide word spacing
