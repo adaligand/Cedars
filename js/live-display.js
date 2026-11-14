@@ -44,42 +44,62 @@ function playGridTimerEndSound() {
         const ctx = new AudioCtx();
         if (ctx.state === 'suspended') ctx.resume();
 
-        // Compressor maximizes perceived loudness on classroom speakers without clipping
-        const compressor = ctx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-12, ctx.currentTime);
-        compressor.knee.setValueAtTime(10, ctx.currentTime);
-        compressor.ratio.setValueAtTime(8, ctx.currentTime);
-        compressor.attack.setValueAtTime(0.005, ctx.currentTime);
-        compressor.release.setValueAtTime(0.15, ctx.currentTime);
-        compressor.connect(ctx.destination);
+        // Low-pass filter removes harsh high frequencies while keeping full mid-range body
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, ctx.currentTime);
+        filter.Q.setValueAtTime(0.7, ctx.currentTime);
 
-        // Play a loud, classroom-audible 3-note chime twice
-        const notes = [523.25, 659.25, 783.99, 523.25, 659.25, 1046.50];
+        // Soft-limiter preserves the high volume without clipping or buzz
+        const shaper = ctx.createWaveShaper();
+        const curve = new Float32Array(44100);
+        for (let i = 0; i < 44100; i++) {
+            const x = (i * 2) / 44100 - 1;
+            curve[i] = Math.tanh(2.2 * x) / Math.tanh(2.2);
+        }
+        shaper.curve = curve;
+        shaper.oversample = '2x';
+
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(1.0, ctx.currentTime);
+
+        filter.connect(shaper);
+        shaper.connect(masterGain);
+        masterGain.connect(ctx.destination);
+
+        // Warm, lower G-major chime (G4 - B4 - D5 - G5) instead of shrill C6-C7
+        const notes = [392.00, 493.88, 587.33, 783.99];
         notes.forEach((freq, idx) => {
-            const startTime = ctx.currentTime + idx * 0.23;
-            const duration = idx === notes.length - 1 ? 0.65 : 0.22;
+            const startTime = ctx.currentTime + idx * 0.24;
+            const duration = idx === notes.length - 1 ? 1.15 : 0.50;
 
-            // Layer triangle (richer harmonics that cut through classroom noise) + sine (bell warmth)
-            ['triangle', 'sine'].forEach((type, layerIdx) => {
+            [
+                { type: 'sine', mult: 1, gain: 0.90 },
+                { type: 'triangle', mult: 1, gain: 0.55 },
+                { type: 'sine', mult: 2, gain: 0.20 }
+            ].forEach(({ type, mult, gain: peakGain }) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                const peakGain = layerIdx === 0 ? 0.95 : 0.75;
 
                 osc.type = type;
-                osc.frequency.setValueAtTime(freq, startTime);
+                osc.frequency.setValueAtTime(freq * mult, startTime);
 
+                // Smooth bell/marimba strike and resonant decay
                 gain.gain.setValueAtTime(0.001, startTime);
                 gain.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.015);
-                gain.gain.setValueAtTime(peakGain * 0.85, startTime + duration * 0.65);
                 gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
                 osc.connect(gain);
-                gain.connect(compressor);
+                gain.connect(filter);
 
                 osc.start(startTime);
-                osc.stop(startTime + duration + 0.02);
+                osc.stop(startTime + duration + 0.03);
             });
         });
+
+        setTimeout(() => {
+            if (ctx.state !== 'closed') ctx.close().catch(() => {});
+        }, 2300);
     } catch (e) {
         console.warn("Audio alert blocked or unavailable:", e);
     }
