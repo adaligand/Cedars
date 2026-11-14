@@ -411,16 +411,18 @@
     <p style="color: #475569; font-size: 12px; margin: 0 0 8px 0; flex-shrink: 0;">
         Enter rules (one per line):
     </p>
-   <ul style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; padding-left: 16px; flex-shrink: 0;">
+  <ul style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; padding-left: 16px; flex-shrink: 0;">
         <li><b>word1 word2=word3</b> (replaces sequence)</li>
         <li><b>word1+word3=replacement</b> (replaces outer words around middle text)</li>
+        <li><b>trigger$target=replacement</b> (replaces/deletes target when preceded by trigger)</li>
         <li><b>word=</b> (deletes)</li>
         <li><b>word1*word2</b> (excludes combo)</li>
     </ul>
    <textarea id="transformations-input" 
     style="flex: 1; min-height: 180px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace; font-size: 12px; outline: none; resize: none;" 
-    placeholder="Have eaten=ate&#10;like+not=don't like&#10;(m)=&#10;n'est pas*assez" 
+    placeholder="Have eaten=ate&#10;like+not=don't like&#10;Je$fatigué(e)(s)=fatigué&#10;Je$(e)(s)=&#10;(m)=&#10;n'est pas*assez" 
     oninput="transformationsText = this.value;"></textarea>
+</div>
 </div>
         </div> <!-- Closes Right Column -->
     </div> <!-- Closes Main Side-by-Side Grid Container -->
