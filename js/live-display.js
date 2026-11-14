@@ -7,6 +7,9 @@ let classDisplaySentences = []; // Holds the randomized sentence list
 // Live games timer reference & sentence processing helpers
 let cdTimer = null;
 let currentCDGapText = null;
+let cdGridTimerInterval = null;
+let cdGridRemainingSeconds = 120;
+let cdGridIsRunning = false;
 
 function clearCDTimer() {
     if (cdTimer) {
@@ -14,6 +17,130 @@ function clearCDTimer() {
         clearTimeout(cdTimer);
         cdTimer = null;
     }
+}
+
+function clearGridTimer() {
+    if (cdGridTimerInterval) {
+        clearInterval(cdGridTimerInterval);
+        cdGridTimerInterval = null;
+    }
+    cdGridIsRunning = false;
+}
+
+function playGridTimerEndSound() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        // Play a clear, classroom-audible 3-note chime twice
+        const notes = [523.25, 659.25, 783.99, 523.25, 659.25, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const startTime = ctx.currentTime + idx * 0.22;
+            const duration = idx === notes.length - 1 ? 0.55 : 0.2;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+
+            gain.gain.setValueAtTime(0.001, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.35, startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.02);
+        });
+    } catch (e) {
+        console.warn("Audio alert blocked or unavailable:", e);
+    }
+}
+
+function getGridConfiguredSeconds() {
+    const minsEl = document.getElementById('cd-grid-mins');
+    const secsEl = document.getElementById('cd-grid-secs');
+    const mins = Math.max(0, Math.min(59, parseInt(minsEl?.value, 10) || 0));
+    const secs = Math.max(0, Math.min(59, parseInt(secsEl?.value, 10) || 0));
+    const total = mins * 60 + secs;
+    return total > 0 ? total : 60;
+}
+
+function renderGridTimerDisplay() {
+    const displayEl = document.getElementById('cd-grid-timer-display');
+    const startBtn = document.getElementById('cd-grid-timer-start-btn');
+
+    const mins = Math.floor(Math.max(0, cdGridRemainingSeconds) / 60);
+    const secs = Math.max(0, cdGridRemainingSeconds) % 60;
+    const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    if (displayEl) {
+        displayEl.textContent = formatted;
+        if (cdGridRemainingSeconds === 0) {
+            displayEl.style.color = '#dc2626';
+        } else if (cdGridRemainingSeconds <= 10 && cdGridIsRunning) {
+            displayEl.style.color = '#ea580c';
+        } else {
+            displayEl.style.color = '#0f172a';
+        }
+    }
+
+    if (startBtn) {
+        startBtn.textContent = cdGridIsRunning ? '⏸ Pause' : '▶ Start';
+    }
+}
+
+function updateGridTimerFromInputs() {
+    if (cdGridTimerInterval) {
+        clearInterval(cdGridTimerInterval);
+        cdGridTimerInterval = null;
+    }
+    cdGridIsRunning = false;
+    cdGridRemainingSeconds = getGridConfiguredSeconds();
+    renderGridTimerDisplay();
+}
+
+function resetGridCountdownTimer() {
+    if (cdGridTimerInterval) {
+        clearInterval(cdGridTimerInterval);
+        cdGridTimerInterval = null;
+    }
+    cdGridIsRunning = false;
+    cdGridRemainingSeconds = getGridConfiguredSeconds();
+    renderGridTimerDisplay();
+}
+
+function toggleGridCountdownTimer() {
+    if (cdGridIsRunning) {
+        clearInterval(cdGridTimerInterval);
+        cdGridTimerInterval = null;
+        cdGridIsRunning = false;
+        renderGridTimerDisplay();
+        return;
+    }
+
+    if (cdGridRemainingSeconds <= 0) {
+        cdGridRemainingSeconds = getGridConfiguredSeconds();
+    }
+
+    cdGridIsRunning = true;
+    renderGridTimerDisplay();
+
+    cdGridTimerInterval = setInterval(() => {
+        cdGridRemainingSeconds--;
+        renderGridTimerDisplay();
+
+        if (cdGridRemainingSeconds <= 0) {
+            clearInterval(cdGridTimerInterval);
+            cdGridTimerInterval = null;
+            cdGridIsRunning = false;
+            renderGridTimerDisplay();
+            playGridTimerEndSound();
+        }
+    }, 1000);
 }
 
 function removeWordsFromSentence(text) {
@@ -163,13 +290,25 @@ function handleCDReattempt(targetText) {
 function playClassDisplayGame() {
     clearCDTimer();
     const mode = document.getElementById('class-display-game-select').value;
-    
+    const gridTimerBar = document.getElementById('cd-grid-timer-bar');
+
+    if (mode !== 'sentence-grid') {
+        clearGridTimer();
+        if (gridTimerBar) gridTimerBar.style.display = 'none';
+    } else {
+        if (gridTimerBar) gridTimerBar.style.display = 'flex';
+        if (!cdGridIsRunning && !cdGridTimerInterval && cdGridRemainingSeconds <= 0) {
+            cdGridRemainingSeconds = getGridConfiguredSeconds();
+        }
+        renderGridTimerDisplay();
+    }
+
     if (!classDisplaySentences || classDisplaySentences.length === 0) {
         const raw = getAssembledSentences();
         if (!raw || raw.length === 0) return;
         classDisplaySentences = shuffleArray(raw);
     }
-    
+
     const container = document.getElementById('class-display-content');
 
     if (mode === 'match-up') {
