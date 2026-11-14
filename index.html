@@ -548,15 +548,16 @@
     <option value="sentence-grid">Translation Grid</option>
 </select>
     <!-- Translation Grid Countdown Timer (shown only for Translation Grid) -->
+           <!-- Translation Grid Countdown Timer (shown only for Translation Grid) -->
             <div id="cd-grid-timer-bar" style="display: none; align-items: center; gap: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 8px;">
                 <span style="font-size: 16px;" title="Allocated time">⏱️</span>
                 <div style="display: flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 600; color: #475569;">
-                    <input id="cd-grid-mins" type="number" min="0" max="59" value="2" oninput="updateGridTimerFromInputs()" title="Minutes" style="width: 44px; padding: 3px 4px; border: 1px solid #cbd5e1; border-radius: 5px; text-align: center; font-weight: bold; font-size: 14px;">
+                    <input id="cd-grid-mins" type="number" min="0" max="59" value="5" oninput="updateGridTimerFromInputs()" title="Minutes" style="width: 44px; padding: 3px 4px; border: 1px solid #cbd5e1; border-radius: 5px; text-align: center; font-weight: bold; font-size: 14px;">
                     <span>m</span>
                     <input id="cd-grid-secs" type="number" min="0" max="59" value="0" oninput="updateGridTimerFromInputs()" title="Seconds" style="width: 44px; padding: 3px 4px; border: 1px solid #cbd5e1; border-radius: 5px; text-align: center; font-weight: bold; font-size: 14px;">
                     <span>s</span>
                 </div>
-                <span id="cd-grid-timer-display" style="font-size: 20px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; padding: 0 4px;">02:00</span>
+                <span id="cd-grid-timer-display" style="font-size: 20px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; padding: 0 4px;">05:00</span>
                 <button id="cd-grid-timer-start-btn" onclick="toggleGridCountdownTimer()" class="btn-purple" style="padding: 5px 12px; font-size: 13px; font-weight: bold; margin: 0;">▶ Start</button>
                 <button onclick="resetGridCountdownTimer()" class="btn-outline" style="padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 0;">↺ Reset</button>
             </div>
