@@ -412,11 +412,11 @@
         Enter rules (one per line):
     </p>
   <ul style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; padding-left: 16px; flex-shrink: 0;">
-        <li><b>word1 word2=word3</b> (replaces sequence)</li>
-        <li><b>word1+word3=replacement</b> (replaces outer words around middle text)</li>
-        <li><b>trigger$target=replacement</b> (replaces/deletes target when preceded by trigger)</li>
+        <li><b>word1 word2=word3</b> (replaces sequence. eg. Have eaten=ate)</li>
+        <li><b>word1+word3=replacement</b> (replaces words around another. eg. like+not=don't like)</li>
+        <li><b>trigger$target=replacement</b> (replaces/deletes word2 when preceded by word1 eg. Je$fatigué(e)(s)=fatigué)</li>
         <li><b>word=</b> (deletes)</li>
-        <li><b>word1*word2</b> (excludes combo)</li>
+        <li><b>word1*word2</b> (excludes combo of two words. eg. J'aime*ennuyeux)</li>
     </ul>
    <textarea id="transformations-input" 
     style="flex: 1; min-height: 180px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace; font-size: 12px; outline: none; resize: none;" 
