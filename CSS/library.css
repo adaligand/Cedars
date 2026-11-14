@@ -1,0 +1,59 @@
+.library-section { margin-bottom: 40px; }
+.year-group { margin-left: 20px; margin-bottom: 25px; }
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 300px); 
+    gap: 20px;
+    padding: 20px 0;
+    justify-content: flex-start;
+}
+
+.project-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    min-height: 30px;
+    width: 250px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent);
+}
+
+.project-left {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-topic { font-weight: 600; color: var(--accent); }
+.project-title { color: #64748b; font-size: 14px; }
+.project-actions { display: flex; gap: 10px; font-size: 18px; }
+.duplicate-btn {
+    color: var(--accent);
+    margin-right: 8px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.duplicate-btn:hover { transform: scale(1.2); }
+.project-actions span {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+.project-actions span:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
