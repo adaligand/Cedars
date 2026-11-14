@@ -1,0 +1,273 @@
+#submissions-page select {
+    width: 100%;
+    padding: 9px 32px 9px 12px;
+    margin-top: 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    background-color: white;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+#submissions-page select:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+#submissions-page select:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+#activity-menu {
+    width: 98vw !important;
+    max-width: 1750px !important;
+    height: 116vh !important;
+    max-height: 116vh !important;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#activity-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 10px;
+    margin-top: 10px;
+}
+.preview-sentence {
+    font-size: 15px;
+    line-height: 1.4;
+    margin: 0;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.preview-sentence span.tr-text {
+    color: var(--translation-blue);
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.activity-row {
+    padding: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.act-sentence-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: white;
+    overflow: hidden;
+}
+
+.act-card-header {
+    background: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    user-select: none;
+}
+
+.act-card-header:hover { background: #f1f5f9; }
+
+.act-card-body {
+    padding: 10px;
+    height: auto;
+}
+.student-card {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 10px;
+}
+
+.student-item-block {
+    background: #f8fafc;
+    padding: 24px 20px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    margin-bottom: 10px;
+}
+/* UNJUMBLED WORD TILES & ANSWER SLOT */
+.jumble-answer-slot {
+    min-height: 64px;
+    min-width: 320px;
+    width: 95%;
+    padding: 12px 18px;
+    background: white;
+    border: 2.5px dashed #cbd5e1;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.jumble-word-tile {
+    padding: 10px 18px !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    margin: 4px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: 2px solid #94a3b8 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.jumble-word-tile:hover {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+}
+
+/* NO SPACES INTERACTIVE GAME STYLING */
+.no-spaces-interactive-line {
+    background: white;
+    padding: 14px 24px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 32px; /* Adjust between 28px - 36px to match your standard question text */
+    line-height: 1.6;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.no-spaces-interactive-line .letter-span,
+.no-spaces-interactive-line .space-span {
+    display: inline;
+    cursor: pointer !important;
+    user-select: none;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+.no-spaces-interactive-line .space-inner {
+    display: none;
+    background-color: #d1fae5;
+    border-bottom: 3px solid #10b981;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 2px;
+    font-size: inherit;
+    font-weight: inherit;
+    color: #065f46;
+}
+
+.no-spaces-interactive-line .space-inner.revealed-space {
+    display: inline-block !important;
+    visibility: visible !important;
+}
+.full-typing-input, .gap-inline-input {
+    font-size: 24px !important;
+}
+.interactive-tile {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 2px 0;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.interactive-tile:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.interactive-tile.selected {
+    background: #cce5ff;
+    border-color: #3b82f6;
+}
+
+.interactive-tile.correct-match {
+    background: #d1fae5 !important;
+    border-color: #10b981 !important;
+    color: #065f46;
+}
+
+.interactive-tile.wrong-match {
+    background: #fee2e2 !important;
+    border-color: #ef4444 !important;
+    color: #991b1b;
+}
+/* LETTER INPUT BOX FOR VOWELS / CONSONANTS */
+.letter-box {
+    width: 24px;
+    height: 34px;
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: bold;
+    font-family: inherit;
+    text-align: center;
+    border: none;
+    border-bottom: 3px solid #334155;
+    background: transparent;
+    margin: 0 2px;
+    outline: none;
+    padding: 0;
+    color: #0f172a;
+}
+
+.letter-box.correct-input {
+    background-color: #d1fae5;
+    border-bottom-color: #10b981;
+}
+
+.letter-box.wrong-input {
+    background-color: #fee2e2;
+    border-bottom-color: #ef4444;
+}
+
+.vk-btn {
+    font-size: 16px;
+    padding: 8px 12px;
+    margin: 2px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    color: #000000;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.15s, background-color 0.15s;
+    font-weight: bold;
+}
+/* GREY KEYBOARD BUTTONS */
+.vk-btn:hover {
+    background-color: #A9A9A9;
+    transform: translateY(-2px);
+
