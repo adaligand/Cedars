@@ -44,26 +44,41 @@ function playGridTimerEndSound() {
         const ctx = new AudioCtx();
         if (ctx.state === 'suspended') ctx.resume();
 
-        // Play a clear, classroom-audible 3-note chime twice
+        // Compressor maximizes perceived loudness on classroom speakers without clipping
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-12, ctx.currentTime);
+        compressor.knee.setValueAtTime(10, ctx.currentTime);
+        compressor.ratio.setValueAtTime(8, ctx.currentTime);
+        compressor.attack.setValueAtTime(0.005, ctx.currentTime);
+        compressor.release.setValueAtTime(0.15, ctx.currentTime);
+        compressor.connect(ctx.destination);
+
+        // Play a loud, classroom-audible 3-note chime twice
         const notes = [523.25, 659.25, 783.99, 523.25, 659.25, 1046.50];
         notes.forEach((freq, idx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const startTime = ctx.currentTime + idx * 0.22;
-            const duration = idx === notes.length - 1 ? 0.55 : 0.2;
+            const startTime = ctx.currentTime + idx * 0.23;
+            const duration = idx === notes.length - 1 ? 0.65 : 0.22;
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, startTime);
+            // Layer triangle (richer harmonics that cut through classroom noise) + sine (bell warmth)
+            ['triangle', 'sine'].forEach((type, layerIdx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const peakGain = layerIdx === 0 ? 0.95 : 0.75;
 
-            gain.gain.setValueAtTime(0.001, startTime);
-            gain.gain.exponentialRampToValueAtTime(0.35, startTime + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, startTime);
 
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+                gain.gain.setValueAtTime(0.001, startTime);
+                gain.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.015);
+                gain.gain.setValueAtTime(peakGain * 0.85, startTime + duration * 0.65);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
-            osc.start(startTime);
-            osc.stop(startTime + duration + 0.02);
+                osc.connect(gain);
+                gain.connect(compressor);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration + 0.02);
+            });
         });
     } catch (e) {
         console.warn("Audio alert blocked or unavailable:", e);
