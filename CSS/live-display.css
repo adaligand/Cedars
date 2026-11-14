@@ -1,0 +1,101 @@
+#class-display-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    max-width: none !important;
+    max-height: none !important;
+    background: #ffffff !important;
+    z-index: 10000 !important;
+    border-radius: 0 !important;
+    padding: 20px 32px !important;
+    box-shadow: none !important;
+    display: none;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#class-display-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+#class-display-game-select {
+    padding: 8px 14px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid #3b82f6;
+    background: #eff6ff;
+    color: #1e3a8a;
+    outline: none;
+    cursor: pointer;
+}
+
+#class-display-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Changed from center to move content toward the top */
+    align-items: center;
+    text-align: center;
+    padding: 10px 0;
+    overflow: hidden;
+    height: 100%;
+}
+      
+/* CLASSROOM HIGH-VISIBILITY TEXT STYLES */
+.cd-question-text {
+    color: #000000 !important;
+    font-size: 5.8rem; /* Increased size */
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    width: 100% !important;
+    max-width: 98% !important;
+    overflow-wrap: anywhere; /* Allows long unbroken strings to wrap */
+    word-break: break-word;  /* Ensures standard words break nicely */
+}
+
+.cd-answer-text {
+    color: #16a34a !important;
+    font-size: 5.8rem; /* Increased size */
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 15px;
+    width: 100% !important;
+    max-width: 98% !important;
+    word-break: normal;
+}
+
+.cd-sub-text {
+    color: #000000 !important;
+    font-size: 4.2rem; /* Increased size */
+    font-weight: 600;
+    margin-top: 15px;
+    width: 100% !important;
+    max-width: 98% !important;
+}
+
+/* MISSING VOWELS & CONSONANTS LETTER SPACING */
+.cd-blank-char {
+    display: inline-block;
+    width: 0.7em;
+    border-bottom: 4px solid #000000;
+    margin: 0 3px;
+}
+
+.cd-word-wrapper {
+    display: inline-block;
+    white-space: nowrap;
+    margin: 0 22px; /* Generous space between words */
+}
